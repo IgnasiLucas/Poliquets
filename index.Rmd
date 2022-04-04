@@ -1,0 +1,56 @@
+---
+title: "Osmoregulació en poliquets del gènere *Nereis*"
+author: "J. Ignacio Lucas Lledó"
+date: "4/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introducció
+
+## Materials i mètodes
+
+## Resultats
+
+```{r resultats}
+library(tidyr)
+library(plyr)
+library(ggplot2)
+cucs <- read.table('Cucs.csv', header = TRUE, dec = ",",
+                   colClasses = c('factor','factor','factor','numeric','numeric','numeric',
+                                  'numeric','numeric','numeric','numeric','numeric'))
+cucs$Cuc <- factor(cucs$Cuc, levels = c('1','2','3','4','5','6','7','8','9','10','11','12'))
+cucs$Subgrup <- factor(cucs$Subgrup, levels = c('L1','L2','L3','L4'))
+cucs_l <- pivot_longer(cucs,
+                       4:11,
+                       names_to = 'Temps',
+                       values_to = 'Volum',
+                       names_prefix = "T_")
+cucs_l$Temps <- as.numeric(cucs_l$Temps)
+ggplot(data = cucs_l, mapping = aes(x = Temps, y = Volum, color = Cuc)) +
+  geom_line() + facet_wrap(~Medi) + geom_vline(xintercept = 28, color = 'gray')
+```
+
+```{r Mitjanes}
+cucs_m <- ddply(cucs_l, c('Subgrup','Medi', 'Temps'),
+                function(x) mean(x$Volum))
+names(cucs_m)[4] <- 'Volum'
+ggplot(data = cucs_m, mapping = aes(x = Temps, y = Volum, color = Medi)) + geom_line()
+```
+
+```{r percentatge}
+cucs_p <- ddply(cucs_l,
+                c('Subgrup','Medi','Cuc'),
+                function(x) {
+                  Inici = x[x$Temps == 0,'Volum']
+                  data.frame(Temps = x$Temps,
+                             Volum = (x$Volum - Inici) / Inici
+                  )})
+ggplot(data = cucs_p, mapping = aes(x = Temps, y = Volum, color = Medi)) +
+  geom_point() + geom_smooth()
+```
+
+## Conclusions
