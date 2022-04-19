@@ -25,8 +25,7 @@ library(tidyr)
 library(plyr)
 library(ggplot2)
 cucs <- read.table('Cucs.csv', header = TRUE, dec = ",",
-                   colClasses = c('factor','factor','factor','numeric','numeric','numeric',
-                                  'numeric','numeric','numeric','numeric','numeric'))
+                   colClasses = c('factor','factor','factor','numeric','numeric','numeric',                       'numeric','numeric','numeric','numeric','numeric'))
 cucs$Cuc <- factor(cucs$Cuc, levels = as.character(1:dim(cucs)[1]))
 cucs$Subgrup <- factor(cucs$Subgrup, levels = c('L1','L2','L3','L4'))
 cucs_l <- pivot_longer(cucs,
