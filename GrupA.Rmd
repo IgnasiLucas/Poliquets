@@ -1,0 +1,82 @@
+---
+title: "Osmoregulació en poliquets del gènere *Nereis*"
+author: "J. Ignacio Lucas Lledó"
+date: "4/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introducció
+
+## Materials i mètodes
+
+## Resultats
+
+En la gràfica següent veiem els canvis de volum patits per cucs individuals en diferents medis al
+llarg del temps que va durar l'experiment. La línia vertical indica els 28 minuts després de la
+introducció del cuc el el medi experimental, i que correspon amb el moment en què els cucs van tornar
+a l'aigua marina.
+
+```{r resultats}
+library(tidyr)
+library(plyr)
+library(ggplot2)
+cucs <- read.table('Cucs2.csv', header = TRUE, dec = ",",
+                   colClasses = c('factor','factor','factor','numeric','numeric','numeric',
+                                  'numeric','numeric','numeric','numeric','numeric'))
+cucs$Cuc <- factor(cucs$Cuc, levels = as.character(2:12))
+cucs$Subgrup <- factor(cucs$Subgrup, levels = c('L1','L2','L3','L4', 'A'))
+cucs_l <- pivot_longer(cucs,
+                       4:11,
+                       names_to = 'Temps',
+                       values_to = 'Volum',
+                       names_prefix = "V_")
+cucs_l$Temps <- as.numeric(cucs_l$Temps)
+ggplot(data = cucs_l, mapping = aes(x = Temps, y = Volum, color = Cuc)) +
+  geom_line() + facet_wrap(~Medi) + geom_vline(xintercept = 28, color = 'gray') +
+  xlab('Temps (minuts)') + ylab('Volum (ml)')
+```
+
+Cada cuc té una mida inicial diferent. Per tal d'apreciar millor l'efecte de cada
+medi sobre la mida dels cucs, podem fer la mitjana del volum de tots els cucs que
+han estat en el mateix medi experimental, en cada moment. A continuació represente
+l'evolució mitjana de les mides dels cucs en cada medi i en cada subgrup:
+
+```{r Mitjanes}
+cucs_m <- ddply(cucs_l, c('Subgrup','Medi', 'Temps'),
+                function(x) mean(x$Volum))
+names(cucs_m)[4] <- 'Volum'
+ggplot(data = cucs_m, mapping = aes(x = Temps, y = Volum, color = Medi)) +
+  geom_vline(xintercept = 28, color = 'gray') +
+  geom_line() +
+  facet_wrap(~Subgrup) + xlab('Temps (minuts)') + ylab('Volum (ml)')
+```
+
+Bona part de les diferències que observem entre les línies de la gràfica
+anterior es deuen a què els cucs tenen mides molt variables. Allò que realment
+ens interessa no és que uns cucs siguen més grans que altres, sinó com canvia
+la seua mida al llarg del temps. Si expressem el canvi de mida en unitats
+**relatives** a la mida inicial, els diferents cucs seran més comparables.
+
+A continuació transforme la mida de cada cuc *i* en cada moment *t* ($V_{it}$) en la
+proporció la proporció que representa el canvi respecte de la mida inicial,
+$\frac{V_{it} - V_{i0}}{V_{i0}}$. Així posem les dades de tots els cucs en la
+mateixa escala i podem observar millor la tendència dels canvis en cada medi:
+
+```{r percentatge}
+cucs_p <- ddply(cucs_l,
+                c('Subgrup','Medi','Cuc'),
+                function(x) {
+                  Inici = x[x$Temps == 0,'Volum']
+                  data.frame(Temps = x$Temps,
+                             Volum = (x$Volum - Inici) / Inici
+                  )})
+ggplot(data = cucs_p, mapping = aes(x = Temps, y = Volum, color = Medi)) +
+  geom_vline(xintercept = 28, color = 'gray') + geom_point() + geom_smooth()  +
+  xlab('Temps (minuts)') + ylab('Canvi relatiu de volum')
+```
+
+## Conclusions
